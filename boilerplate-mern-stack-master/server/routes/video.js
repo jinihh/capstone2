@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 var ffmpeg = require('fluent-ffmpeg');
-const { Video } = require("../models/Video"); //만든 비디오 모델 임포트
-const { auth } = require("../middleware/auth");
 
+const { Video } = require("../models/Video");
+const { Subscriber } = require("../models/Subscriber");
+const { auth } = require("../middleware/auth");
 
 var storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -22,12 +23,7 @@ var storage = multer.diskStorage({
     }
 })
 
-
-
-var upload = multer({ 
-    storage: storage,
-}).single("file")
-
+var upload = multer({ storage: storage }).single("file")
 
 
 //=================================
@@ -45,33 +41,6 @@ router.post("/uploadfiles", (req, res) => {
     })
 
 });
-
-//비디오를 db에서 가져와서 클라이언트에 보낸다
-router.get("/getVideos", (req, res) => {
-    //비디오 컬렉션안에있는 모든 비디오 가져옴
-    Video.find()
-        .populate('writer')//writer의 모든 정보 가져옴, (user/video.js에서)   
-        // writer: {
-           // type:Schema.Types.ObjectId,
-        .exec((err, videos) => {
-            if(err) return res.status(400).send(err);
-            res.status(200).json({ success: true, videos }) //videos :비디오 정보들 다 
-        })
-
-});
-
-router.post("/getVideo", (req, res) => {
-
-    //id이용해서 찾을거임, 클라이언트에서보낸 videoid를 넣어서 찾겠다.
-    Video.findOne({ "_id" : req.body.videoId })
-    //populate를 해줌으로 비디오 아이디 뿐만아니라 모든 정보 다 가져옴
-    .populate('writer')
-    .exec((err, video) => {
-        if(err) return res.status(400).send(err);
-        res.status(200).json({ success: true, video })
-    })
-});
-
 
 
 router.post("/thumbnail", (req, res) => {
@@ -107,20 +76,75 @@ router.post("/thumbnail", (req, res) => {
 
 });
 
+
+// 사용자 종속 및 class가 "raw"인 비디오만 가져오기
+router.get('/getVideos', (req, res) => {
+    const userId = req.query.userId; // 요청에서 사용자 ID를 받음 (프론트엔드에서 전달)
+
+    if (!userId) {
+        return res.status(400).json({ success: false, message: "User ID is required" });
+    }
+
+    Video.find({ writer: userId, class: 'raw' }) // 조건: 작성자가 userId인 비디오 && class가 'raw'
+        .populate('writer') // 작성자 정보 포함
+        .exec((err, videos) => {
+            if (err) {
+                return res.status(400).json({ success: false, message: "Failed to fetch videos", err });
+            }
+            res.status(200).json({ success: true, videos });
+        });
+});
+
+
 router.post("/uploadVideo", (req, res) => {
 
     const video = new Video(req.body)
-    //클라이언트에서 보낸 정보들 모두 담음
-    //if) new Video(req,body.writer)만하면 writer정보만
 
-    video.save((err, video) => { //몽고디비에 저장하도록
+    video.save((err, video) => {
         if(err) return res.status(400).json({ success: false, err })
         return res.status(200).json({
-            success: true,
-            videoId: video._id
+            success: true 
         })
     })
 
+});
+
+
+router.post("/getVideo", (req, res) => {
+
+    Video.findOne({ "_id" : req.body.videoId })
+    .populate('writer')
+    .exec((err, video) => {
+        if(err) return res.status(400).send(err);
+        res.status(200).json({ success: true, video })
+    })
+});
+
+
+router.post("/getSubscriptionVideos", (req, res) => {
+
+
+    //Need to find all of the Users that I am subscribing to From Subscriber Collection 
+    
+    Subscriber.find({ 'userFrom': req.body.userFrom })
+    .exec((err, subscribers)=> {
+        if(err) return res.status(400).send(err);
+
+        let subscribedUser = [];
+
+        subscribers.map((subscriber, i)=> {
+            subscribedUser.push(subscriber.userTo)
+        })
+
+
+        //Need to Fetch all of the Videos that belong to the Users that I found in previous step. 
+        Video.find({ writer: { $in: subscribedUser }})
+            .populate('writer')
+            .exec((err, videos) => {
+                if(err) return res.status(400).send(err);
+                res.status(200).json({ success: true, videos })
+            })
+    })
 });
 
 module.exports = router;
