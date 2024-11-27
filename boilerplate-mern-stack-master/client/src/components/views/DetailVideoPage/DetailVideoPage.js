@@ -52,6 +52,16 @@ function DetailVideoPage(props) {
     //몽고디비에서 동영상 꺼내기
     
     useEffect(() => {
+        // GET 방식으로 BlurInfo API 호출
+        axios.get(`/api/blur/getBlurInfo?videoId=${videoId}`)
+            .then(response => {
+                if (response.data.success) {
+                    console.log('BlurInfo found:', response.data.blurInfo);
+                    setBlurInfoId(response.data.blurInfo._id);
+                } else {
+                    alert('Blur Info not found');
+                }
+            })
         // 탐지된 비디오와 타임라인 데이터를 가져오는 API 호출
         
         const videoVariable = {
@@ -77,20 +87,6 @@ function DetailVideoPage(props) {
                 });
         } else {
         // 업로드한 원본 비디오를 가져오는 경우
-        /*
-            axios.post('/api/video/getVideo', videoVariable)
-                .then(response => {
-                    if (response.data.success) {
-                        console.log(response.data.video);
-                        setVideo(response.data.video);
-                    } else {
-                        alert('Failed to get video Info');
-                    }
-                })
-                .catch(err => {
-                    console.error('Error fetching original video:', err);
-                });*/
-                // 업로드한 원본 비디오를 가져오는 경우
             axios.get(`/flask-api/get_video?video_id=${videoId}`)
             .then(response => {
                 if (response.status === 200) {
@@ -105,19 +101,6 @@ function DetailVideoPage(props) {
             });
         }
 
-
-        /*
-        axios.post('/api/video/getVideo', videoVariable)
-            .then(response => {
-                if (response.data.success) {
-                    console.log(response.data.video)
-                    setVideo(response.data.video)
-                } else {
-                    alert('Failed to get video Info')
-                }
-            })
-*/
-
 }, [videoId, isDetectedVideo]);
 
 
@@ -126,20 +109,6 @@ function DetailVideoPage(props) {
     if (Video.length === 0) {
         return <div>Loading...</div>
     }
-        /*
-        axios.post('/api/comment/getComments', videoVariable)
-            .then(response => {
-                if (response.data.success) {
-                    console.log('response.data.comments',response.data.comments)
-                    //setCommentLists(response.data.comments)
-                } else {
-                    alert('Failed to get video Info')
-                }
-            })
-*/
-
-
-    //}, [])
 
     // 레벨 변경 핸들러
     const handleLevelChange = (value) => {
@@ -182,6 +151,35 @@ function DetailVideoPage(props) {
     //    setCommentLists(CommentLists.concat(newComment))
     //}
 
+
+    // Blur 처리 API 호출 함수
+    const applyBlurHandler = () => {
+        if (!blurInfoId) {
+            alert('Blur Info is missing!');
+            return;
+        }
+
+        setLoading(true);
+
+        axios.post('/api/blur/applyBlur', {
+            videoId: videoId,
+            blurInfoId: blurInfoId
+        })
+            .then(response => {
+                setLoading(false);
+                if (response.data.success) {
+                    alert('Blur 처리 완료');
+                    // 처리된 비디오 결과를 보여주거나 다른 작업을 할 수 있습니다.
+                } else {
+                    alert('Blur 처리에 실패했습니다.');
+                }
+            })
+            .catch(error => {
+                setLoading(false);
+                alert('서버 오류가 발생했습니다.');
+            });
+    }
+  
     if (Video && Object.keys(Video).length > 0) {
     //if (Video.writer) {
         return (
