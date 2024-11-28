@@ -1,6 +1,7 @@
 # 유해 이미지 영상 Blur 처리 서비스
 
-![Logo or Banner Image](./KakaoTalk_20241126_221950590.png)
+![Uploading KakaoTalk_20241126_221950590.png…]()
+
 ![image](https://github.com/user-attachments/assets/e9fddfcb-dca4-4c40-bf6e-3aaaafffef70)
 
 
