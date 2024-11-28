@@ -1,6 +1,8 @@
 # 유해 이미지 영상 Blur 처리 서비스
 
-![Logo or Banner Image](./path-to-banner-image.png)
+![Logo or Banner Image](./KakaoTalk_20241126_221950590.png)
+![image](https://github.com/user-attachments/assets/e9fddfcb-dca4-4c40-bf6e-3aaaafffef70)
+
 
 ## 🛠 프로젝트 개요
 본 프로젝트는 **YOLOv8 객체 탐지**를 활용하여 영상에서 유해 물질(담배, 술, 칼 등)을 탐지하고, **자동 블러링** 처리를 지원하는 AI 서비스입니다. 방송국, OTT 플랫폼, 개인 영상 편집자를 위한 효율적인 영상 편집 솔루션을 제공합니다.
