@@ -1,40 +1,43 @@
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema
+const Schema = mongoose.Schema;
 
-// Detected Object Schema
+// Detected Object Schema (프레임별 bounding_box 추가)
 const detectedObjectSchema = new mongoose.Schema({
-  bounding_box: {
-    type: String, // JSON 형식의 문자열로 저장하거나 Object로 변경 가능
-    required: true
-  },
-  type: {
+  bounding_box: [
+    {
+      frame: {
+        type: Number, // 프레임 번호
+        required: true,
+      },
+      box: {
+        type: String, // x,y,width,height 형태로 저장
+        required: true,
+      },
+    },
+  ],
+  type: { // 탐지한 객체의 유형 (예: 사람, 차량)
     type: String,
-    required: true
+    required: true,
   },
-  time: {
-    type: Number
-  }
 });
 
 // Timeline Schema
 const timelineSchema = new mongoose.Schema({
-//   timeline_id: {
-//     type: Schema.Types.ObjectId,
-//     unique: true,
-//     auto: true, // ObjectId 자동 생성
-//   },
   video_id: {
     type: Schema.Types.ObjectId,
-    ref: 'Video', // video 컬렉션 참조
+    ref: 'Video', // Video 컬렉션 참조
+    required: true,
   },
   start_time: {
-    type: Number,
+    type: Number, // 타임라인 시작 시간 (초)
+    required: true,
   },
   end_time: {
-    type: Number,
+    type: Number, // 타임라인 종료 시간 (초)
+    required: true,
   },
   detected_object: {
-    type: [detectedObjectSchema], // detectedObjectSchema 배열
+    type: [detectedObjectSchema], // Detected Object 배열
     default: [],
   },
 });

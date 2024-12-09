@@ -8,7 +8,7 @@ const blurInfoSchema = new mongoose.Schema({
     ref: 'Video', // video 컬렉션 참조
     required: true,
   },
-  strength: {
+  strength: { // 블러 강도
     type: Number,
     required: true,
     min: [1, 'Strength must be at least 1'], // 최소값 유효성 검사
