@@ -3,8 +3,10 @@ import { FaCode } from "react-icons/fa";
 import { Card, Avatar, Col, Typography, Row } from 'antd';
 import axios from 'axios';
 import moment from 'moment';
+
 const { Title } = Typography;
 const { Meta } = Card;
+
 function LandingPage() {
     //비디오 정보들 state화 저장 
     const [Videos, setVideos] = useState([])
@@ -22,10 +24,7 @@ function LandingPage() {
             })
     }, [])
 
-
-
-
-
+    // 비디오 정보 카드를 렌더링하는 부분
     const renderCards = Videos.map((video, index) => {
         //duration다 초로 되어있어서 계산 필요
         //원본 비디오 카드
@@ -41,7 +40,9 @@ function LandingPage() {
         return <Col lg={6} md={8} xs={24} key={index}>
             <div style={{ position: 'relative' }}>
                 <a href={`/video/${video._id}`} > 
-                <img style={{ width: '100%' }} alt="thumbnail" src={`http://localhost:5000/${video.thumbnail}`} />
+                <img style={{ width: '100%' }} alt="thumbnail" src={`http://localhost:5000/${video.thumbnail}`}
+                // MongoDB에 저장된 썸네일 파일 경로를 사용 
+                />
                 <div className=" duration"
                     style={{ bottom: 0, right:0, position: 'absolute', margin: '4px', 
                     color: '#fff', backgroundColor: 'rgba(17, 17, 17, 0.8)', opacity: 0.8, 
@@ -71,13 +72,15 @@ function LandingPage() {
                 - <span> {moment(video.createdAt).format("MMM Do YY")} </span>
             </Col>
 
+            
+
     })
 
 
 
     return (
         <div style={{ width: '85%', margin: '3rem auto' }}>
-            <Title level={2} > Recommended </Title>
+            <Title level={2} > Uploaded Video </Title>
             <hr />
 
             <Row gutter={16}>

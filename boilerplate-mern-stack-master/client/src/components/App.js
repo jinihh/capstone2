@@ -29,8 +29,6 @@ function App() {
           <Route exact path="/register" component={Auth(RegisterPage, false)} />
           <Route exact path="/video/upload" component={Auth(UploadVideoPage, true)} />
           <Route exact path="/video/:videoId" component={Auth(DetailVideoPage, true)} />
-          <Route exact path="/video/result:videoId" component={Auth(ResultPage, true)} />
-          <Route exact path="/video/detected/:videoId" component={Auth(DetailVideoPage, true)} />
           
 
         </Switch>
@@ -41,3 +39,6 @@ function App() {
 }
 
 export default App;
+
+//          <Route exact path="/video/detected/:videoId" component={Auth(DetailVideoPage, true)} />
+//          <Route exact path="/video/result:videoId" component={Auth(ResultPage, true)} />

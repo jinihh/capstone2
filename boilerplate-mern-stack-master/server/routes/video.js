@@ -23,7 +23,6 @@ var storage = multer.diskStorage({
 })
 
 
-
 var upload = multer({ 
     storage: storage,
 }).single("file")
@@ -80,6 +79,9 @@ router.post("/thumbnail", (req, res) => {
     let fileDuration ="";
 
     ffmpeg.ffprobe(req.body.filePath, function(err, metadata){
+        if (err) {
+            return res.status(400).json({ success: false, err });
+        }
         console.dir(metadata);
         console.log(metadata.format.duration);
 
@@ -96,6 +98,10 @@ router.post("/thumbnail", (req, res) => {
             console.log('Screenshots taken');
             return res.json({ success: true, thumbsFilePath: thumbsFilePath, fileDuration: fileDuration})
         })
+        .on('error', function (err) {
+            console.error('Error during thumbnail creation', err);
+            return res.status(400).json({ success: false, err });
+        })
         .screenshots({
             // Will take screens at 20%, 40%, 60% and 80% of the video
             count: 3,
@@ -106,21 +112,38 @@ router.post("/thumbnail", (req, res) => {
         });
 
 });
+//절대 경로로 변경 시작 구간
+const path = require('path');
 
 router.post("/uploadVideo", (req, res) => {
+    try {
 
-    const video = new Video(req.body)
-    //클라이언트에서 보낸 정보들 모두 담음
-    //if) new Video(req,body.writer)만하면 writer정보만
+        // req.body.filePath에서 중복된 'uploads/' 제거
+        const relativeFilePath = req.body.filePath.replace(/^uploads[\\/]/, '');
 
-    video.save((err, video) => { //몽고디비에 저장하도록
-        if(err) return res.status(400).json({ success: false, err })
-        return res.status(200).json({
-            success: true,
-            videoId: video._id
-        })
-    })
+        // MongoDB에 저장할 데이터에 절대 경로 포함
+        const videoData = {
+            ...req.body, // 기존 데이터 유지
+            filePath: path.resolve(__dirname, '../../uploads', relativeFilePath) // 절대 경로로 변환
+        };
+        console.log('Resolved file path:', videoData.filePath);
 
+        const video = new Video(videoData);
+
+        video.save((err, video) => {
+            if (err) {
+                console.error('Error saving video to MongoDB', err);
+                return res.status(400).json({ success: false, err });
+            }
+            return res.status(200).json({
+                success: true,
+                videoId: video._id // video._id를 응답에 포함하여 반환
+            });
+        });
+    } catch (error) {
+        console.error('Error processing file path:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
 });
 
 module.exports = router;

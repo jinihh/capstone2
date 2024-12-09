@@ -4,7 +4,6 @@
  /api/video/thumbnail: 썸네일 생성.
  /api/video/uploadVideo: 영상 정보를 MongoDB에 저장.
 */
-
 import React, { useState, useEffect } from 'react'
 import { Typography, Button, Form, message, Input, Icon } from 'antd';
 import Dropzone from 'react-dropzone';
@@ -36,10 +35,9 @@ function UploadVideoPage(props) {
     const [FilePath, setFilePath] = useState("")
     const [Duration, setDuration] = useState("")
     const [Thumbnail, setThumbnail] = useState("")
+    //const [file, setFile] = useState(null);
+
     //const [VideoData, setVideoData] = useState(""); // Base64 인코딩된 비디오 데이터
-
-
-
     const handleChangeTitle = (event) => {
         setTitle(event.currentTarget.value)
     }
@@ -57,6 +55,10 @@ function UploadVideoPage(props) {
         setCategories(event.currentTarget.value)
     }
 
+    //const handleFileChange = (e) => {
+    //    setFile(e.currentTarget.value)
+    //}
+
     const onSubmit = (event) => {
 
         event.preventDefault(); //원래클릭하려던거 방지하고 지정해주는거 하도록
@@ -71,17 +73,19 @@ function UploadVideoPage(props) {
             return alert('Please first fill all the fields')
         }
 
+        // MongoDB에 저장할 정보들
         const variables = { //비디오js 콜렉션에 들어갈정보
             writer: user.userData._id,
             title: title,
             description: Description,
             privacy: privacy,
-            filePath: FilePath,
+            filePath: FilePath, // 비디오 파일의 경로 정보만 저장
             category: Categories,
             duration: Duration,
             thumbnail: Thumbnail,
-            //video_data: VideoData 
         }
+
+        console.log("Submitting video data:", variables); // 디버그 로그 추가
 
         //이ㅣ 정보가지고 리퀘스트 조냄
         axios.post('/api/video/uploadVideo', variables)
@@ -89,24 +93,26 @@ function UploadVideoPage(props) {
                 console.log("Upload response:", response); // 서버 응답 출력
                 if (response.data.success) {
                     alert('video Uploaded Successfully')
-                    props.history.push('/')
 
-                    // 객체 탐지 요청
-                   //const detectVariables = {
-                   //     videoId: response.data.videoId  // 업로드한 비디오의 ID
-                    //};
+                    // 업로드된 비디오의 MongoDB `_id`를 Flask API로 전달, 객체 탐지 요청
 
-                    //console.log("Detect Variables being sent:", detectVariables);
+                    axios.post('/flask-api/detect_objects', { video_id: response.data.videoId })
+                    .then(detectResponse => {
+                        if (detectResponse.data.success) {
+                            console.log('Object detection successfully initiated');
+                            alert('Video Uploaded and Object Detection Completed Successfully');
+                        } else {
+                            alert('Failed to detect objects in the video');
+                            console.error('Failed to initiate object detection:', detectResponse.data.error);
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error in object detection:', err);
+                        alert('Error occurred during object detection');
+                    });
 
-                    
-                    //동영상이 성공적으로 업로드되면 객체 탐지 API호출
-                    //Flask-server의 detect_objects 엔드포인트에 업로드된 비디오 아이디 전달하여 객체 탐지 수행
-                    //axios.post('/flask-server/detect_objects', detectVariables)
-                    //axios.post('http://127.0.0.1:5001/detect_objects', detectVariables,{
-                    //    headers: {
-                    //        'Content-Type': 'application/json'
-                    //    }
-                    //})
+
+
                     /*
                     .then(detectResponse => {
                         if (detectResponse.data.success) {
@@ -126,10 +132,15 @@ function UploadVideoPage(props) {
                         console.error('Error during object detection:', err);
                         alert('Error during object detection');
                     });*/
+                    // 업로드 완료 후 LandingPage로 이동
+                    props.history.push('/');
                 } else {
                     alert('Failed to upload video')
                 }
             })
+            .catch(err => {
+                console.error('Error saving video to database', err);
+            });
             /*
             .catch(err => {
                 console.error('Error during video upload:', err);
@@ -188,13 +199,16 @@ function UploadVideoPage(props) {
                                 alert('Failed to make the thumbnails');
                             }
                         })
-
-
+                        .catch(err=>{
+                            console.error('Error creating thumnails',err);
+                        });
                 } else {
                     alert('failed to save the video in server')
                 }
             })
-
+            .catch(err => {
+                console.error('Error uploading video', err);
+            });
     }
 
 
@@ -216,13 +230,12 @@ function UploadVideoPage(props) {
                             >
                                 <input {...getInputProps()} />
                                 <Icon type="plus" style={{ fontSize: '3rem' }} />
-
                             </div>
                         )}
                     </Dropzone>
                     {Thumbnail !== "" &&
                         <div>
-                            <img src={`http://localhost:5000/${Thumbnail}`} alt="haha" />
+                            <img src={`http://localhost:5000/${Thumbnail}`} alt="Thumbnail" />
                         </div>
                     }
                 </div>
@@ -257,7 +270,7 @@ function UploadVideoPage(props) {
 
                 <Button type="primary" size="large" onClick={onSubmit}>
                     Submit
-            </Button>
+                </Button>
 
             </Form>
         </div>
