@@ -15,7 +15,7 @@ app = Flask(__name__)
 CORS(app) 
 
 # MongoDB Atlas 연결
-uri = "mongodb+srv://capstone:rkdqkrchlghd@cluster0.l6abg.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+uri = ""
 client = MongoClient(uri)
 
 try:
