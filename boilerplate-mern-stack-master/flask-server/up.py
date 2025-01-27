@@ -3,7 +3,7 @@ from pymongo.server_api import ServerApi
 import base64
 
 # MongoDB Atlas 연결
-uri = "mongodb+srv://capstone:rkdqkrchlghd@cluster0.l6abg.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+uri = ""
 client = MongoClient(uri, server_api=ServerApi('1'))
 
 # 데이터베이스 선택
